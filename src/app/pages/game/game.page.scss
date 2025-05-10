@@ -1,0 +1,12 @@
+#game-container {
+    width: 100vw;
+    height: calc(100vh - 56px);
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+  }
+  canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+  }
