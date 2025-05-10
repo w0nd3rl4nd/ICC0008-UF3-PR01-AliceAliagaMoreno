@@ -15,23 +15,26 @@ export class MainScene extends Phaser.Scene {
   private shotTimestamps: number[] = [];
   private isGameOver: boolean = false;
   private playerName: string = '';
+  private onGameOverNavigate!: (name: string, score: number) => void;
 
   constructor() {
     super('main');
   }
 
+  init(data: any) {
+    this.playerName = data.playerName || 'Jugador Anónimo';
+    this.onGameOverNavigate = data.onGameOverNavigate;
+  }
+
   preload() {
-    this.load.image('spaceship',  'assets/game/spaceship.png');
-    this.load.image('bullet',     'assets/game/bullet.png');
-    this.load.image('asteroid',   'assets/game/asteroid.png');
+    this.load.image('spaceship', 'assets/game/spaceship.png');
+    this.load.image('bullet', 'assets/game/bullet.png');
+    this.load.image('asteroid', 'assets/game/asteroid.png');
     this.load.image('background', 'assets/game/background.png');
   }
 
   create() {
     const { width, height } = this.scale;
-
-    const { playerName } = this.sys.game.config as any;
-    this.playerName = playerName || 'Jugador Anónimo';
 
     this.add.image(0, 0, 'background').setOrigin(0).setDisplaySize(width, height);
 
@@ -90,10 +93,10 @@ export class MainScene extends Phaser.Scene {
       this.scoreText.setText(`Puntuación: ${this.score}`);
     });
 
-    this.cursors     = this.input.keyboard.createCursorKeys();
-    this.spacebar    = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-    this.pauseKey    = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P);
-    this.restartKey  = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+    this.cursors = this.input.keyboard.createCursorKeys();
+    this.spacebar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    this.pauseKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P);
+    this.restartKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
   }
 
   override update() {
@@ -153,7 +156,7 @@ export class MainScene extends Phaser.Scene {
   private gameOver() {
     this.isGameOver = true;
     const { width, height } = this.scale;
-
+    
     this.add.text(width / 2, height / 2, 'GAME OVER', {
       fontSize: '48px',
       color: '#ff0000'
@@ -168,6 +171,8 @@ export class MainScene extends Phaser.Scene {
       }).setOrigin(0.5).setDepth(10);
     }
 
-    this.scene.pause('main');
+    setTimeout(() => {
+      this.onGameOverNavigate(this.playerName, this.score);
+    }, 3000);
   }
 }

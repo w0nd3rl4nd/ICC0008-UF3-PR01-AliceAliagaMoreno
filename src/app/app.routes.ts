@@ -17,10 +17,6 @@ export const routes: Routes = [
   {
     path: 'scores',
     loadComponent: () => import('./pages/scores/scores.page').then( m => m.ScoresPage)
-  },
-  {
-    path: 'scores',
-    loadComponent: () => import('./pages/scores/scores.page').then( m => m.ScoresPage)
-  },
+  }
 
 ];

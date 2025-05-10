@@ -5,15 +5,14 @@
 </ion-header>
 
 <ion-content class="ion-padding">
-  <ion-list>
-    <ion-item *ngFor="let entry of scores; let i = index">
-      <ion-label>
-        {{ i + 1 }}. {{ entry.name }} — {{ entry.score }} pts
-      </ion-label>
-    </ion-item>
-  </ion-list>
+  <div>
+    <h3>{{ playerName }} - {{ playerScore }}</h3>
+    <ion-list>
+      <ion-item *ngFor="let score of scores">
+        <ion-label>{{ score.name }} - {{ score.score }}</ion-label>
+      </ion-item>
+    </ion-list>
+  </div>
 
-  <ion-button expand="block" (click)="goHome()">
-    Volver al inicio
-  </ion-button>
+  <ion-button expand="block" (click)="goHome()">Ir al inicio</ion-button>
 </ion-content>
