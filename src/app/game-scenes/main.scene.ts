@@ -14,6 +14,7 @@ export class MainScene extends Phaser.Scene {
   private missed: number = 0;
   private shotTimestamps: number[] = [];
   private isGameOver: boolean = false;
+  private playerName: string = '';
 
   constructor() {
     super('main');
@@ -28,6 +29,9 @@ export class MainScene extends Phaser.Scene {
 
   create() {
     const { width, height } = this.scale;
+
+    const { playerName } = this.sys.game.config as any;
+    this.playerName = playerName || 'Jugador Anónimo';
 
     this.add.image(0, 0, 'background').setOrigin(0).setDisplaySize(width, height);
 
@@ -90,35 +94,6 @@ export class MainScene extends Phaser.Scene {
     this.spacebar    = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.pauseKey    = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P);
     this.restartKey  = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
-
-    if (this.sys.game.device.input.touch) {
-      const leftZone = this.add.zone(0, height * 0.5, width * 0.3, height).setOrigin(0).setInteractive();
-      const rightZone = this.add.zone(width * 0.7, height * 0.5, width * 0.3, height).setOrigin(0).setInteractive();
-      const fireZone = this.add.zone(width * 0.3, 0, width * 0.4, height * 0.5).setOrigin(0).setInteractive();
-      const pauseZone = this.add.zone(width * 0.85, 0, width * 0.15, height * 0.15).setOrigin(0).setInteractive();
-
-      let isMovingLeft = false;
-      let isMovingRight = false;
-
-      leftZone.on('pointerdown', () => { isMovingLeft = true; });
-      leftZone.on('pointerup', () => { isMovingLeft = false; });
-
-      rightZone.on('pointerdown', () => { isMovingRight = true; });
-      rightZone.on('pointerup', () => { isMovingRight = false; });
-
-      fireZone.on('pointerdown', () => { this.shoot(); });
-
-      pauseZone.on('pointerdown', () => {
-        this.scene.isPaused('main') ? this.scene.resume('main') : this.scene.pause('main');
-      });
-
-      this.events.on('update', () => {
-        if (isMovingLeft) this.ship.setVelocityX(-300);
-        else if (isMovingRight) this.ship.setVelocityX(300);
-        else this.ship.setVelocityX(0);
-      });
-      
-    }
   }
 
   override update() {
@@ -183,6 +158,15 @@ export class MainScene extends Phaser.Scene {
       fontSize: '48px',
       color: '#ff0000'
     }).setOrigin(0.5).setDepth(10);
+
+    const highScore = localStorage.getItem('highScore');
+    if (!highScore || this.score > Number(highScore)) {
+      localStorage.setItem('highScore', String(this.score));
+      this.add.text(width / 2, height / 2 + 50, `Nueva Puntuación Más Alta: ${this.score}`, {
+        fontSize: '24px',
+        color: '#00ff00'
+      }).setOrigin(0.5).setDepth(10);
+    }
 
     this.scene.pause('main');
   }
