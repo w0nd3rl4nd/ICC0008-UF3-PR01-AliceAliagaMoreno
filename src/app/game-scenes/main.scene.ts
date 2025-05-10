@@ -1,5 +1,3 @@
-// src/app/game-scenes/main.scene.ts
-
 import Phaser from 'phaser';
 
 export class MainScene extends Phaser.Scene {
@@ -11,10 +9,11 @@ export class MainScene extends Phaser.Scene {
   private pauseKey!: Phaser.Input.Keyboard.Key;
   private restartKey!: Phaser.Input.Keyboard.Key;
   private scoreText!: Phaser.GameObjects.Text;
-  private score: number = 0;
-  private shotTimestamps: number[] = [];
-  private missed: number = 0;
   private missedText!: Phaser.GameObjects.Text;
+  private score: number = 0;
+  private missed: number = 0;
+  private shotTimestamps: number[] = [];
+  private isGameOver: boolean = false;
 
   constructor() {
     super('main');
@@ -30,11 +29,17 @@ export class MainScene extends Phaser.Scene {
   create() {
     const { width, height } = this.scale;
 
-    const bg = this.add.image(0, 0, 'background').setOrigin(0);
-    bg.setDisplaySize(width, height);
+    this.add.image(0, 0, 'background').setOrigin(0).setDisplaySize(width, height);
 
-    this.scoreText = this.add.text(10, 10, 'Puntuación: 0', { fontSize: '24px', color: '#fff' }).setDepth(1);
-    this.missedText = this.add.text(10, 40, 'Escapados: 0/5', { fontSize: '24px', color: '#f88' }).setDepth(1);
+    this.scoreText = this.add.text(10, 10, 'Puntuación: 0', {
+      fontSize: '24px',
+      color: '#ffffff'
+    }).setDepth(1);
+
+    this.missedText = this.add.text(10, 40, 'Escapados: 0/5', {
+      fontSize: '24px',
+      color: '#ff8888'
+    }).setDepth(1);
 
     this.ship = this.physics.add
       .sprite(width / 2, height - 50, 'spaceship')
@@ -42,13 +47,21 @@ export class MainScene extends Phaser.Scene {
       .setAngle(-90);
     this.ship.body.setSize(this.ship.width * 0.3, this.ship.height * 0.3);
 
-    this.bullets = this.physics.add.group({ classType: Phaser.Physics.Arcade.Image, runChildUpdate: true });
-    this.asteroids = this.physics.add.group({ classType: Phaser.Physics.Arcade.Image });
+    this.bullets = this.physics.add.group({
+      classType: Phaser.Physics.Arcade.Image,
+      runChildUpdate: true
+    });
+
+    this.asteroids = this.physics.add.group({
+      classType: Phaser.Physics.Arcade.Image
+    });
 
     this.time.addEvent({
       delay: 1000,
       loop: true,
       callback: () => {
+        if (this.isGameOver) return;
+
         const x = Phaser.Math.Between(20, width - 20);
         const asteroid = this.asteroids.get(x, 0, 'asteroid') as Phaser.Physics.Arcade.Image;
         if (asteroid) {
@@ -64,25 +77,62 @@ export class MainScene extends Phaser.Scene {
       }
     });
 
-    this.physics.add.overlap(this.bullets, this.asteroids, (b, a) => {
-      (b as Phaser.Physics.Arcade.Image).destroy();
-      (a as Phaser.Physics.Arcade.Image).destroy();
+    this.physics.add.overlap(this.bullets, this.asteroids, (bulletObj, asteroidObj) => {
+      const bullet = bulletObj as Phaser.Physics.Arcade.Image;
+      const asteroid = asteroidObj as Phaser.Physics.Arcade.Image;
+      bullet.destroy();
+      asteroid.destroy();
       this.score += 1;
       this.scoreText.setText(`Puntuación: ${this.score}`);
     });
 
-    this.cursors    = this.input.keyboard.createCursorKeys();
-    this.spacebar  = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-    this.pauseKey  = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P);
-    this.restartKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+    this.cursors     = this.input.keyboard.createCursorKeys();
+    this.spacebar    = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    this.pauseKey    = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P);
+    this.restartKey  = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+
+    if (this.sys.game.device.input.touch) {
+      const leftZone = this.add.zone(0, height * 0.5, width * 0.3, height).setOrigin(0).setInteractive();
+      const rightZone = this.add.zone(width * 0.7, height * 0.5, width * 0.3, height).setOrigin(0).setInteractive();
+      const fireZone = this.add.zone(width * 0.3, 0, width * 0.4, height * 0.5).setOrigin(0).setInteractive();
+      const pauseZone = this.add.zone(width * 0.85, 0, width * 0.15, height * 0.15).setOrigin(0).setInteractive();
+
+      let isMovingLeft = false;
+      let isMovingRight = false;
+
+      leftZone.on('pointerdown', () => { isMovingLeft = true; });
+      leftZone.on('pointerup', () => { isMovingLeft = false; });
+
+      rightZone.on('pointerdown', () => { isMovingRight = true; });
+      rightZone.on('pointerup', () => { isMovingRight = false; });
+
+      fireZone.on('pointerdown', () => { this.shoot(); });
+
+      pauseZone.on('pointerdown', () => {
+        this.scene.isPaused('main') ? this.scene.resume('main') : this.scene.pause('main');
+      });
+
+      this.events.on('update', () => {
+        if (isMovingLeft) this.ship.setVelocityX(-300);
+        else if (isMovingRight) this.ship.setVelocityX(300);
+        else this.ship.setVelocityX(0);
+      });
+      
+    }
   }
 
   override update() {
-    const { width, height } = this.scale;
+    if (this.isGameOver) return;
 
-    if (this.cursors.left?.isDown)       this.ship.setVelocityX(-300);
-    else if (this.cursors.right?.isDown) this.ship.setVelocityX(300);
-    else                                  this.ship.setVelocityX(0);
+    const { height } = this.scale;
+
+    if (this.cursors.left?.isDown) {
+      this.ship.setVelocityX(-300);
+    } else if (this.cursors.right?.isDown) {
+      this.ship.setVelocityX(300);
+    } else {
+      this.ship.setVelocityX(0);
+    }
 
     if (Phaser.Input.Keyboard.JustDown(this.spacebar)) {
       this.shoot();
@@ -97,15 +147,13 @@ export class MainScene extends Phaser.Scene {
     }
 
     this.asteroids.getChildren().forEach(obj => {
-      const ast = obj as Phaser.Physics.Arcade.Image;
-      if (ast.active && ast.y > height + ast.displayHeight) {
-        ast.destroy();
+      const asteroid = obj as Phaser.Physics.Arcade.Image;
+      if (asteroid.active && asteroid.y > height + asteroid.displayHeight) {
+        asteroid.destroy();
         this.missed += 1;
         this.missedText.setText(`Escapados: ${this.missed}/5`);
         if (this.missed >= 5) {
-          this.add.text(width/2, height/2, 'GAME OVER', { fontSize: '48px', color: '#f00' })
-            .setOrigin(0.5).setDepth(2);
-          this.scene.pause('main');
+          this.gameOver();
         }
       }
     });
@@ -125,5 +173,17 @@ export class MainScene extends Phaser.Scene {
       .setAngle(-90)
       .setVelocityY(-300)
       .setCollideWorldBounds(false);
+  }
+
+  private gameOver() {
+    this.isGameOver = true;
+    const { width, height } = this.scale;
+
+    this.add.text(width / 2, height / 2, 'GAME OVER', {
+      fontSize: '48px',
+      color: '#ff0000'
+    }).setOrigin(0.5).setDepth(10);
+
+    this.scene.pause('main');
   }
 }
