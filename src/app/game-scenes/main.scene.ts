@@ -93,6 +93,12 @@ export class MainScene extends Phaser.Scene {
       this.scoreText.setText(`Puntuación: ${this.score}`);
     });
 
+    this.physics.add.collider(this.ship, this.asteroids, () => {
+      if (!this.isGameOver) {
+        this.gameOver();
+      }
+    });
+
     this.cursors = this.input.keyboard.createCursorKeys();
     this.spacebar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.pauseKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P);
@@ -156,7 +162,7 @@ export class MainScene extends Phaser.Scene {
   private gameOver() {
     this.isGameOver = true;
     const { width, height } = this.scale;
-    
+
     this.add.text(width / 2, height / 2, 'GAME OVER', {
       fontSize: '48px',
       color: '#ff0000'
