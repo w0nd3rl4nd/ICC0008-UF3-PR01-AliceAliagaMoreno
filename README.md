@@ -34,21 +34,10 @@ ionic capacitor run ios
 ionic capacitor run android
 ```
 
-## Key Features
-- [List 2-3 main features of your app]
-- [Highlight unique functionalities]
-
 ## Technologies
 - Ionic
-- Angular/React (specify which)
+- Angular
 - Capacitor
-
-## Development
-- Recommended IDE: Visual Studio Code
-- Use `npm run lint` for code quality checks
-
-## Deployment
-- Platforms supported: iOS, Android, Web
 
 ## Contact
 Alice Aliaga Moreno
