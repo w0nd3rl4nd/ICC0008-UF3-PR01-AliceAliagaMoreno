@@ -1,5 +1,3 @@
-// src/app/game-scenes/main.scene.ts
-
 import Phaser from 'phaser';
 
 export class MainScene extends Phaser.Scene {
@@ -10,6 +8,7 @@ export class MainScene extends Phaser.Scene {
   private spacebar!: Phaser.Input.Keyboard.Key;
   private score: number = 0;
   private shotTimestamps: number[] = [];
+  private scoreText!: Phaser.GameObjects.Text;
 
   constructor() {
     super('main');
@@ -28,6 +27,11 @@ export class MainScene extends Phaser.Scene {
     const bg = this.add.image(0, 0, 'background').setOrigin(0);
     bg.setDisplaySize(width, height);
 
+    this.scoreText = this.add.text(10, 10, 'Puntuación: 0', {
+      fontSize: '24px',
+      color: '#ffffff'
+    }).setDepth(1);
+
     this.ship = this.physics.add
       .sprite(width / 2, height - 50, 'spaceship')
       .setCollideWorldBounds(true)
@@ -38,10 +42,10 @@ export class MainScene extends Phaser.Scene {
       classType: Phaser.Physics.Arcade.Image,
       runChildUpdate: true
     });
-
     this.asteroids = this.physics.add.group({
       classType: Phaser.Physics.Arcade.Image
     });
+
     this.time.addEvent({
       delay: 1000,
       loop: true,
@@ -65,11 +69,10 @@ export class MainScene extends Phaser.Scene {
       this.bullets,
       this.asteroids,
       (bulletObj, asteroidObj) => {
-        const bullet = bulletObj as Phaser.Physics.Arcade.Image;
-        const asteroid = asteroidObj as Phaser.Physics.Arcade.Image;
-        bullet.destroy();
-        asteroid.destroy();
+        (bulletObj as Phaser.Physics.Arcade.Image).destroy();
+        (asteroidObj as Phaser.Physics.Arcade.Image).destroy();
         this.score += 1;
+        this.scoreText.setText(`Puntuación: ${this.score}`);
       }
     );
 
@@ -90,9 +93,7 @@ export class MainScene extends Phaser.Scene {
   private shoot() {
     const now = this.time.now;
     this.shotTimestamps = this.shotTimestamps.filter(ts => now - ts < 5000);
-    if (this.shotTimestamps.length >= 10) {
-      return;
-    }
+    if (this.shotTimestamps.length >= 10) return;
     this.shotTimestamps.push(now);
 
     const bullet = this.bullets.get() as Phaser.Physics.Arcade.Image;
