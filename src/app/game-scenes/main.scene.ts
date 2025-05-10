@@ -52,7 +52,7 @@ export class MainScene extends Phaser.Scene {
       .sprite(width / 2, height - 50, 'spaceship')
       .setCollideWorldBounds(true)
       .setAngle(-90);
-    this.ship.body.setSize(this.ship.width * 0.3, this.ship.height * 0.3);
+    this.ship.body?.setSize(this.ship.width * 0.3, this.ship.height * 0.3);
 
     this.bullets = this.physics.add.group({
       classType: Phaser.Physics.Arcade.Image,
@@ -99,10 +99,10 @@ export class MainScene extends Phaser.Scene {
       }
     });
 
-    this.cursors = this.input.keyboard.createCursorKeys();
-    this.spacebar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-    this.pauseKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P);
-    this.restartKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+    this.cursors = this.input.keyboard!.createCursorKeys();
+    this.spacebar = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    this.pauseKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.P);
+    this.restartKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.R);
   }
 
   override update() {
